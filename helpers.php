@@ -16,7 +16,7 @@ function basePath($path = '') {
  */
 function loadView($view) {
     $viewPath = basePath("views/{$view}.view.php");
-
+    
     if (file_exists($viewPath)) {
         require $viewPath;
     } else {
@@ -37,4 +37,26 @@ function loadPartial($partial) {
     } else {
         echo "Partial {$partial} not found";
     }
+}
+
+/**
+ * Inspect a value(s)
+ * @param mixed $values
+ * @return void
+ */
+function inspect($value) {
+    echo '<pre>';
+    var_dump($value);
+    echo '</pre>';
+}
+
+/**
+ * Inspect a value(s) and die
+ * @param mixed $values
+ * @return void
+ */
+function inspectAndDie($value) {
+    echo '<pre>';
+    die(var_dump($value));
+    echo '</pre>';
 }

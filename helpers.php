@@ -20,7 +20,7 @@ function loadView($view) {
     if (file_exists($viewPath)) {
         require $viewPath;
     } else {
-        echo "Partial {$view} not found";
+        echo "View {$view} not found";
     }
 }
 

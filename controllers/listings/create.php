@@ -1,2 +1,2 @@
 <?php
-echo 'Create job post';
+loadView('listings/create');

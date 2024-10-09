@@ -30,10 +30,11 @@ function loadView($view, $data = []) {
  * @param string $partial
  * @return void
  */
-function loadPartial($partial) {
+function loadPartial($partial, $data = []) {
     $partialPath = basePath("App/views/partials/{$partial}.php");
 
     if (file_exists($partialPath)) {
+        extract($data);
         require $partialPath;
     } else {
         echo "Partial {$partial} not found";
@@ -81,4 +82,15 @@ function formatSalary($salary) {
  */
 function sanitize($dirty) {
     return filter_var(trim($dirty), FILTER_SANITIZE_SPECIAL_CHARS);
+}
+
+/**
+ * Redirect to given url
+ *
+ * @param sting $url
+ * @return void
+ */
+function redirect($url) {
+    header("Location: {$url}");
+    exit;
 }

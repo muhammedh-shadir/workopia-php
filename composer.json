@@ -1,15 +1,18 @@
 {
-    "name": "muhammedh-shadir/workopia-php",
-    "description": "Job listing application",
-    "authors": [{
-        "name": "Muhammedh Shadir",
-        "email": "muhammedhshadir@gmail.com"
-    }],
-    "autoload": {
-        "psr-4": {
-            "Framework\\": "Framework/",
-            "App\\": "App/",
-            "App\\Controllers\\": "App/controllers"
-        }
+  "name": "muhammedh-shadir/workopia-php",
+  "description": "Job listing application",
+  "authors": [
+    {
+      "name": "Muhammedh Shadir",
+      "email": "muhammedhshadir@gmail.com"
     }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Framework\\": "Framework/",
+      "Framework\\Middleware\\": "Framework/middleware",
+      "App\\": "App/",
+      "App\\Controllers\\": "App/controllers"
+    }
+  }
 }

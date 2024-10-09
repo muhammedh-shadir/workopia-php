@@ -3,7 +3,9 @@
 namespace App\Controllers;
 
 use Framework\Database;
+use Framework\Session;
 use Framework\Validation;
+use Framework\Authorization;
 
 class ListingController {
 
@@ -21,7 +23,7 @@ class ListingController {
      * @return void
      */
     public function index() {
-        $listings = $this->db->query('SELECT * FROM listings')->fetchAll();
+        $listings = $this->db->query('SELECT * FROM listings ORDER BY created_at DESC')->fetchAll();
 
         loadView('listings/index', [
             'listings' => $listings
@@ -52,7 +54,7 @@ class ListingController {
         $listing = $this->db->query('SELECT * FROM listings WHERE id = :id', $params)->fetch();
 
         if (!$listing) {
-            ErrorController::notFound('Listing not fount');
+            ErrorController::notFound('Listing not found');
             return;
         }
         
@@ -67,16 +69,16 @@ class ListingController {
      * @return void
      */
     public function store() {
-        $allowedFields = ['title', 'description', 'salary', 
+        $allowedFields = ['title', 'description', 'salary', 'tags', 
         'requirements', 'benefits', 'company', 'address', 'city', 'state', 
-        'phone', 'email', 'tags'];
+        'phone', 'email'];
 
         $newListingData = array_intersect_key($_POST, array_flip($allowedFields));
-        $newListingData['user_id'] = 1;
+        $newListingData['user_id'] = Session::get('user')['id'];
 
         $newListingData = array_map('sanitize', $newListingData);
 
-        $requiredFields = ['title', 'description', 'email', 'city', 'state'];
+        $requiredFields = ['title', 'description', 'salary', 'email', 'city', 'state'];
         $errors = [];
 
         foreach ($requiredFields as $field) {
@@ -91,7 +93,179 @@ class ListingController {
                 'listing' => $newListingData
             ]);
         } else {
-            echo 'success';
+            // echo 'success';
+            $fields = [];
+            $values = [];
+
+            foreach ($newListingData as $field => $value) {
+                $fields[] = $field;
+
+                if ($value === '') {
+                    $newListingData[$field] = null;
+                }
+                $values[] = ':' . $field;
+            }
+
+            $fields = implode(', ', $fields);
+            $values = implode(', ', $values);
+            
+            $query = "INSERT INTO listings ({$fields}) VALUES({$values})";
+
+            $this->db->query($query, $newListingData);
+
+            Session::setFlashMessage('success_message', 'Listing updated');
+
+            redirect('/listings');
         }
+    }
+
+    /**
+     * Delete a listing
+     * 
+     * @param array $params
+     * @return void
+     */
+    public function destroy($params) {
+        $id = $params['id'];
+
+        $params = [
+            'id' => $id
+        ];
+
+        $listing = $this->db->query('SELECT * FROM listings WHERE id = :id', $params)->fetch();
+
+        if (!$listing) {
+            ErrorController::notFound('Listing not found');
+            return;
+        }
+
+        if (!Authorization::isOwner($listing->user_id)) {
+            Session::setFlashMessage('error_message', 'You are not authorized to delete this listing');
+            return redirect('/listings/' . $listing->id);
+        }
+        
+        $this->db->query('DELETE FROM listings WHERE id = :id', $params);
+
+        Session::setFlashMessage('success_message', 'Listing delete successfully');
+
+        redirect('/listings');
+    }
+
+        /**
+     * Show the listing edit form
+     *
+     * @return void
+     */
+    public function edit($params) {
+        $id = $params['id'];
+
+        $params = [
+            'id' => $id
+        ];
+
+        $listing = $this->db->query('SELECT * FROM listings WHERE id = :id', $params)->fetch();
+
+        if (!$listing) {
+            ErrorController::notFound('Listing not found');
+            return;
+        }
+        
+        if (!Authorization::isOwner($listing->user_id)) {
+            Session::setFlashMessage('error_message', 'You are not authorized to edit this listing');
+            return redirect('/listings/' . $listing->id);
+        }
+        
+        loadView('listings/edit', [
+            'listing' => $listing
+        ]);
+    }
+
+    /**
+     * Update a listing
+     *
+     * @param array $params
+     * @return void
+     */
+    public function update($params) {
+        $id = $params['id'];
+
+        $params = [
+            'id' => $id
+        ];
+
+        $listing = $this->db->query('SELECT * FROM listings WHERE id = :id', $params)->fetch();
+
+        if (!$listing) {
+            ErrorController::notFound('Listing not fount');
+            return;
+        }
+
+        if (!Authorization::isOwner($listing->user_id)) {
+            Session::setFlashMessage('error_message', 'You are not authorized to edit this listing');
+            return redirect('/listings/' . $listing->id);
+        }
+
+        $allowedFields = ['title', 'description', 'salary', 'tags', 
+        'requirements', 'benefits', 'company', 'address', 'city', 'state', 
+        'phone', 'email'];
+
+        $updateValues = array_intersect_key($_POST, array_flip($allowedFields));
+
+        $updateValues = array_map('sanitize', $updateValues);
+
+        $requiredFields = ['title', 'description', 'salary', 'email', 'city', 'state'];
+        $errors = [];
+
+        foreach ($requiredFields as $field) {
+            if(empty($updateValues[$field]) || !Validation::string($updateValues[$field])) {
+                $errors[$field] = ucfirst($field) . ' is required';
+            }
+        }
+
+        if (!empty($errors)) {
+            loadView('listings/edit', [
+                'errors' => $errors,
+                'listing' => $listing
+            ]);
+            exit;
+        } else { 
+            $updateFields = [];
+
+            foreach (array_keys($updateValues) as $field) {
+                $updateFields[] = "{$field} = :{$field}";
+            }
+
+            $updateFields = implode(', ', $updateFields);
+            $updateQuery = "UPDATE listings SET $updateFields WHERE id = :id";
+            $updateValues['id'] = $id;
+
+            $this->db->query($updateQuery, $updateValues);
+            
+            Session::setFlashMessage('success_message', 'Listing updated');
+
+            redirect('/listings/' . $id);
+        }
+    }
+
+    public function search() {
+        $keywords = sanitize($_GET['keywords']);
+        $location = sanitize($_GET['location']);
+
+        $query = 'SELECT * FROM listings WHERE (title LIKE :keywords 
+        OR description LIKE :keywords OR tags LIKE :keywords OR company 
+        LIKE :keywords) AND (city LIKE :location OR state LIKE :location)';
+
+        $params = [
+            'keywords' => "%{$keywords}%",
+            'location' => "%{$location}%"
+        ];
+        
+        $listings = $this->db->query($query, $params)->fetchAll();
+
+        loadView('listings/index', [
+            'listings' => $listings,
+            'keywords' => $keywords,
+            'location' => $location
+        ]);
     }
 }

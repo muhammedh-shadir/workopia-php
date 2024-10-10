@@ -2,14 +2,16 @@
 
 namespace Framework;
 
-class Session {
+class Session
+{
 
     /**
      * Start a session
      *
      * @return void
      */
-    public static function start() {
+    public static function start()
+    {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
@@ -22,7 +24,8 @@ class Session {
      * @param mixed $value
      * @return void
      */
-    public static function set($key, $value) {
+    public static function set($key, $value)
+    {
         $_SESSION[$key] = $value;
     }
 
@@ -33,7 +36,8 @@ class Session {
      * @param mixed $default
      * @return mixed
      */
-    public static function get($key, $default = null) {
+    public static function get($key, $default = null)
+    {
         return isset($_SESSION[$key]) ? $_SESSION[$key] : $default;
     }
 
@@ -43,7 +47,8 @@ class Session {
      * @param string $key
      * @return bool
      */
-    public static function has($key) {
+    public static function has($key)
+    {
         return isset($_SESSION[$key]);
     }
 
@@ -53,7 +58,8 @@ class Session {
      * @param string $key
      * @return void
      */
-    public static function clear($key) {
+    public static function clear($key)
+    {
         if (isset($_SESSION[$key])) {
             unset($_SESSION[$key]);
         }
@@ -64,7 +70,8 @@ class Session {
      * 
      * @return void
      */
-    public static function clearAll() {
+    public static function clearAll()
+    {
         session_unset();
         session_destroy();
     }
@@ -76,7 +83,8 @@ class Session {
      * @param string $value
      * @return void
      */
-    public static function setFlashMessage($key, $value) {
+    public static function setFlashMessage($key, $value)
+    {
         self::set('flash_' . $key, $value);
     }
 
@@ -87,7 +95,8 @@ class Session {
      * @param mixed $default
      * @return string
      */
-    public static function getFlashMessage($key, $default = null) {
+    public static function getFlashMessage($key, $default = null)
+    {
         $message = self::get('flash_' . $key, $default);
         self::clear('flash_' . $key);
         return $message;

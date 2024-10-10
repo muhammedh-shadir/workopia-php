@@ -7,10 +7,11 @@ use Framework\Session;
 use Framework\Validation;
 use Framework\Authorization;
 
-class ListingController {
+class ListingController
+{
 
     protected $db;
-    
+
     public function __construct()
     {
         $config = require basePath('config/db.php');
@@ -22,7 +23,8 @@ class ListingController {
      *
      * @return void
      */
-    public function index() {
+    public function index()
+    {
         $listings = $this->db->query('SELECT * FROM listings ORDER BY created_at DESC')->fetchAll();
 
         loadView('listings/index', [
@@ -35,7 +37,8 @@ class ListingController {
      *
      * @return void
      */
-    public function create() {
+    public function create()
+    {
         loadView('listings/create');
     }
 
@@ -44,7 +47,8 @@ class ListingController {
      *
      * @return void
      */
-    public function show($params) {
+    public function show($params)
+    {
         $id = $params['id'];
 
         $params = [
@@ -57,7 +61,7 @@ class ListingController {
             ErrorController::notFound('Listing not found');
             return;
         }
-        
+
         loadView('listings/show', [
             'listing' => $listing
         ]);
@@ -68,10 +72,22 @@ class ListingController {
      *
      * @return void
      */
-    public function store() {
-        $allowedFields = ['title', 'description', 'salary', 'tags', 
-        'requirements', 'benefits', 'company', 'address', 'city', 'state', 
-        'phone', 'email'];
+    public function store()
+    {
+        $allowedFields = [
+            'title',
+            'description',
+            'salary',
+            'tags',
+            'requirements',
+            'benefits',
+            'company',
+            'address',
+            'city',
+            'state',
+            'phone',
+            'email'
+        ];
 
         $newListingData = array_intersect_key($_POST, array_flip($allowedFields));
         $newListingData['user_id'] = Session::get('user')['id'];
@@ -82,11 +98,11 @@ class ListingController {
         $errors = [];
 
         foreach ($requiredFields as $field) {
-            if(empty($newListingData[$field]) || !Validation::string($newListingData[$field])) {
+            if (empty($newListingData[$field]) || !Validation::string($newListingData[$field])) {
                 $errors[$field] = ucfirst($field) . ' is required';
             }
         }
-        
+
         if (!empty($errors)) {
             loadView('listings/create', [
                 'errors' => $errors,
@@ -108,7 +124,7 @@ class ListingController {
 
             $fields = implode(', ', $fields);
             $values = implode(', ', $values);
-            
+
             $query = "INSERT INTO listings ({$fields}) VALUES({$values})";
 
             $this->db->query($query, $newListingData);
@@ -125,7 +141,8 @@ class ListingController {
      * @param array $params
      * @return void
      */
-    public function destroy($params) {
+    public function destroy($params)
+    {
         $id = $params['id'];
 
         $params = [
@@ -143,7 +160,7 @@ class ListingController {
             Session::setFlashMessage('error_message', 'You are not authorized to delete this listing');
             return redirect('/listings/' . $listing->id);
         }
-        
+
         $this->db->query('DELETE FROM listings WHERE id = :id', $params);
 
         Session::setFlashMessage('success_message', 'Listing delete successfully');
@@ -151,12 +168,13 @@ class ListingController {
         redirect('/listings');
     }
 
-        /**
+    /**
      * Show the listing edit form
      *
      * @return void
      */
-    public function edit($params) {
+    public function edit($params)
+    {
         $id = $params['id'];
 
         $params = [
@@ -169,12 +187,12 @@ class ListingController {
             ErrorController::notFound('Listing not found');
             return;
         }
-        
+
         if (!Authorization::isOwner($listing->user_id)) {
             Session::setFlashMessage('error_message', 'You are not authorized to edit this listing');
             return redirect('/listings/' . $listing->id);
         }
-        
+
         loadView('listings/edit', [
             'listing' => $listing
         ]);
@@ -186,7 +204,8 @@ class ListingController {
      * @param array $params
      * @return void
      */
-    public function update($params) {
+    public function update($params)
+    {
         $id = $params['id'];
 
         $params = [
@@ -205,9 +224,20 @@ class ListingController {
             return redirect('/listings/' . $listing->id);
         }
 
-        $allowedFields = ['title', 'description', 'salary', 'tags', 
-        'requirements', 'benefits', 'company', 'address', 'city', 'state', 
-        'phone', 'email'];
+        $allowedFields = [
+            'title',
+            'description',
+            'salary',
+            'tags',
+            'requirements',
+            'benefits',
+            'company',
+            'address',
+            'city',
+            'state',
+            'phone',
+            'email'
+        ];
 
         $updateValues = array_intersect_key($_POST, array_flip($allowedFields));
 
@@ -217,7 +247,7 @@ class ListingController {
         $errors = [];
 
         foreach ($requiredFields as $field) {
-            if(empty($updateValues[$field]) || !Validation::string($updateValues[$field])) {
+            if (empty($updateValues[$field]) || !Validation::string($updateValues[$field])) {
                 $errors[$field] = ucfirst($field) . ' is required';
             }
         }
@@ -228,7 +258,7 @@ class ListingController {
                 'listing' => $listing
             ]);
             exit;
-        } else { 
+        } else {
             $updateFields = [];
 
             foreach (array_keys($updateValues) as $field) {
@@ -240,14 +270,15 @@ class ListingController {
             $updateValues['id'] = $id;
 
             $this->db->query($updateQuery, $updateValues);
-            
+
             Session::setFlashMessage('success_message', 'Listing updated');
 
             redirect('/listings/' . $id);
         }
     }
 
-    public function search() {
+    public function search()
+    {
         $keywords = sanitize($_GET['keywords']);
         $location = sanitize($_GET['location']);
 
@@ -259,7 +290,7 @@ class ListingController {
             'keywords' => "%{$keywords}%",
             'location' => "%{$location}%"
         ];
-        
+
         $listings = $this->db->query($query, $params)->fetchAll();
 
         loadView('listings/index', [

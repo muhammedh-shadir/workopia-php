@@ -2,7 +2,8 @@
 
 namespace App\Controllers;
 
-class ErrorController {
+class ErrorController
+{
 
     /**
      * 404 not found error
@@ -10,7 +11,8 @@ class ErrorController {
      * @param string $message
      * @return void
      */
-    public static function notFound($message = 'Resource not found') {
+    public static function notFound($message = 'Resource not found')
+    {
         http_response_code(404);
 
         loadView('error', [
@@ -19,13 +21,14 @@ class ErrorController {
         ]);
     }
 
-        /**
+    /**
      * 403 unauthorized error
      *
      * @param string $message
      * @return void
      */
-    public static function unauthorized($message = 'Your are not authorized to view this resource') {
+    public static function unauthorized($message = 'Your are not authorized to view this resource')
+    {
         http_response_code(403);
 
         loadView('error', [

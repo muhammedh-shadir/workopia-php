@@ -6,7 +6,8 @@ use Framework\Database;
 use Framework\Validation;
 use Framework\Session;
 
-class UserController {
+class UserController
+{
     protected $db;
 
     public function __construct()
@@ -20,7 +21,8 @@ class UserController {
      *
      * @return void
      */
-    public function login() {
+    public function login()
+    {
         loadView('users/login');
     }
 
@@ -29,7 +31,8 @@ class UserController {
      *
      * @return void
      */
-    public function create() {
+    public function create()
+    {
         loadView('users/create');
     }
 
@@ -38,7 +41,8 @@ class UserController {
      *
      * @return void
      */
-    public function store() {
+    public function store()
+    {
         $name = $_POST['name'];
         $email = $_POST['email'];
         $city = $_POST['city'];
@@ -76,7 +80,7 @@ class UserController {
                 ]
             ]);
             exit;
-        } 
+        }
 
         //check if email exists
         $params = [
@@ -92,7 +96,7 @@ class UserController {
             ]);
             exit;
         }
-        
+
         //create user account
         $params = [
             'name' => $name,
@@ -103,15 +107,15 @@ class UserController {
         ];
 
         $this->db->query('INSERT INTO users (name, email, city, state, password) VALUES(:name, :email, :city, :state, :password)', $params);
-        
+
         $userId = $this->db->conn->lastInsertId();
 
         Session::set('user', [
-           'user' => $userId,
-           'name' => $name,
-           'email' => $email,
-           'city' => $city,
-           'state' => $state 
+            'user' => $userId,
+            'name' => $name,
+            'email' => $email,
+            'city' => $city,
+            'state' => $state
         ]);
 
         redirect('/');
@@ -122,7 +126,8 @@ class UserController {
      *
      * @return void
      */
-    public function logout() {
+    public function logout()
+    {
         Session::clearAll();
 
         $params = session_get_cookie_params();
@@ -133,7 +138,8 @@ class UserController {
     }
 
 
-    public function authenticate() {
+    public function authenticate()
+    {
         $email = $_POST['email'];
         $password = $_POST['password'];
 
@@ -181,9 +187,9 @@ class UserController {
             'name' => $user->name,
             'email' => $user->email,
             'city' => $user->city,
-            'state' => $user->state 
+            'state' => $user->state
         ]);
- 
-         redirect('/');
+
+        redirect('/');
     }
 }
